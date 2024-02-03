@@ -2,14 +2,8 @@
 
 import { useContext, useEffect, useState } from 'react'
 import {
-  Accordion,
-  AccordionButton,
-  AccordionIcon,
-  AccordionItem,
-  AccordionPanel,
   Box,
   Button,
-  Divider,
   Flex,
   FormControl,
   FormErrorMessage,
@@ -20,13 +14,6 @@ import {
   Input,
   InputGroup,
   InputRightElement,
-  Link,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalHeader,
-  ModalOverlay,
   NumberDecrementStepper,
   NumberIncrementStepper,
   NumberInput,
@@ -34,10 +21,6 @@ import {
   NumberInputStepper,
   Radio,
   RadioGroup,
-  Slider,
-  SliderFilledTrack,
-  SliderThumb,
-  SliderTrack,
   Spinner,
   Text,
   Textarea,
@@ -47,22 +30,14 @@ import {
 import { useForm } from 'react-hook-form'
 import { FaCheck } from 'react-icons/fa'
 
-import { GlobalContext, toast } from '@/app/providers'
-import {
-  MEMPOOL_URL,
-  OrderStatus,
-  UINT8_MAX,
-  UINT_MAX,
-} from '@/utils/constants'
+import { GlobalContext } from '@/app/providers'
+import { OrderStatus, UINT8_MAX, UINT_MAX } from '@/utils/constants'
 import { useEndpoint } from '@/utils/request'
-import CopyToClipboard from '@/components/CopyToClipboard'
-import { satsToBTC } from '@/utils/functions'
-import WalletConnector from '@/app/WalletConnector'
-import { useCountDown } from 'ahooks'
-import QRCode from '@/components/QRCode'
 import { useRouter } from 'next/navigation'
+import PaymentModal from '@/components/PaymentModal'
+import FeeRateSelector from '@/components/FeeRateSelector'
 
-const bitworkcMap: Dict = {
+export const bitworkcMap: Dict = {
   '0000': {
     label: 'easy',
     timeSec: 64,
@@ -105,24 +80,12 @@ function Page() {
 
   const [mode, setMode] = useState<'fair' | 'fixed'>('fair')
   const [step, setStep] = useState<1 | 2 | 3>(1)
-  const [feeRate, setFeeRate] = useState<string>('fastestFee')
   const [isTickerValid, setIsTickerValid] = useState<boolean>(false)
-  const [targetDate, setTargetDate] = useState<number>()
+  const [remainTime, setRemainTime] = useState<number>()
 
   const { isOpen, onOpen, onClose } = useDisclosure()
 
   const router = useRouter()
-
-  const {
-    data: fees,
-    run: getFees,
-    loading: loadingFees,
-  } = useEndpoint(`${MEMPOOL_URL}/api/v1/fees/recommended`, {
-    onSuccess: (data) => {
-      setValue('satsbyte', data.halfHourFee)
-      setFeeRate('halfHourFee')
-    },
-  })
 
   const {
     handleSubmit,
@@ -149,12 +112,6 @@ function Page() {
       description: '',
       legalTerms: '',
       bitworkc: '0000',
-      name: 'MXSYA',
-      mintAmount: 1000,
-      maxMints: 21000,
-      mintHeight: 0,
-      totalSupply: 0,
-      address: '',
       satsbyte: 0,
     },
   })
@@ -168,19 +125,28 @@ function Page() {
     }
   }, [account])
 
-  const [_, countDown] = useCountDown({
-    targetDate,
-  })
-
   const {
-    run: initDft,
-    loading: initDftIsLoading,
-    data: initDftResult,
+    run: initDFT,
+    loading: initDFTIsLoading,
+    data: initDFTResult,
   } = useEndpoint(`atomicals/init-dft`, {
     method: 'POST',
     onSuccess: (data) => {
       onOpen()
-      setTargetDate(Date.now() + 1000 * 60 * 60 * 2)
+      setRemainTime(Date.now() + 1000 * 60 * 60 * 2)
+      getOrder(undefined, { id: data?.orderId })
+    },
+  })
+
+  const {
+    run: mintFT,
+    loading: mintFTIsLoading,
+    data: mintFTResult,
+  } = useEndpoint(`atomicals/mint-ft`, {
+    method: 'POST',
+    onSuccess: (data) => {
+      onOpen()
+      setRemainTime(Date.now() + 1000 * 60 * 60 * 2)
       getOrder(undefined, { id: data?.orderId })
     },
   })
@@ -213,17 +179,28 @@ function Page() {
         setStep(3)
       } else if (order.status === OrderStatus.Timeout) {
         onClose()
-        router.push('/arc20/orders')
+        router.push('/account/orders')
       } else {
         setTimeout(() => {
-          getOrder(undefined, { id: initDftResult?.orderId })
+          getOrder(undefined, {
+            id:
+              mode === 'fair' ? initDFTResult?.orderId : mintFTResult?.orderId,
+          })
         }, 1000 * 10)
       }
     },
   })
 
   return (
-    <Flex justify="center">
+    <Box
+      mt={4}
+      bg="gray.700"
+      px={8}
+      py={6}
+      w="max-content"
+      m="auto"
+      borderRadius={10}
+    >
       {/* Step 1. */}
       {step === 1 && (
         <VStack w={600} spacing={6}>
@@ -351,7 +328,12 @@ function Page() {
                 <NumberInputField
                   placeholder="21000000"
                   {...register('totalSupply', {
+                    min: {
+                      value: 546,
+                      message: 'The minimum total supply is 546',
+                    },
                     required: 'This field is required',
+                    valueAsNumber: true,
                   })}
                 />
                 <NumberInputStepper>
@@ -465,10 +447,8 @@ function Page() {
           <Button
             size="lg"
             mt={8}
-            mb={12}
             w="full"
             onClick={handleSubmit(() => {
-              getFees()
               setStep(2)
             })}
           >
@@ -479,7 +459,7 @@ function Page() {
 
       {/* Step 2. */}
       {step === 2 && (
-        <VStack w={620}>
+        <VStack w={620} bg="gray.700">
           <FormControl isRequired isInvalid={!!errors.address}>
             <FormLabel>Receive Address</FormLabel>
             <Input
@@ -493,99 +473,26 @@ function Page() {
               {errors.address && (errors.address.message as string)}
             </FormErrorMessage>
           </FormControl>
-          {loadingFees && (
-            <Spinner
-              thickness="4px"
-              speed="0.65s"
-              emptyColor="gray.200"
-              color="blue.500"
-              size="xl"
-              mt={10}
-            />
-          )}
-          {fees && (
-            <HStack spacing={10} mt={4} w={600} wrap="wrap">
-              {Object.keys(feesMap).map((fee) => (
-                <VStack
-                  key={fee}
-                  spacing={1}
-                  px={10}
-                  py={2}
-                  border="2px solid"
-                  borderColor={feeRate === fee ? 'primaryl' : 'gray.600'}
-                  _hover={{ borderColor: 'primaryl' }}
-                  cursor="pointer"
-                  borderRadius={8}
-                  bg="gray.800"
-                  onClick={() => {
-                    setFeeRate(fee)
-                    setValue('satsbyte', fees[fee])
-                  }}
-                >
-                  <Box>{feesMap[fee].label}</Box>
-                  <HStack spacing={1}>
-                    <Box fontSize={18} color="primaryr">
-                      {fees[fee]}
-                    </Box>
-                    <Box>sats/vB</Box>
-                  </HStack>
-                  <Box fontSize={12} fontStyle="italic">
-                    ~ {feesMap[fee].time}
-                  </Box>
-                </VStack>
-              ))}
-              <VStack
-                spacing={1}
-                px={10}
-                py={2}
-                border="2px solid"
-                borderColor={feeRate === 'custom' ? 'primaryl' : 'gray.600'}
-                _hover={{ borderColor: 'primaryl' }}
-                cursor="pointer"
-                borderRadius={8}
-                bg="gray.800"
-                onClick={() => {
-                  setFeeRate('custom')
-                  setValue('satsbyte', fees.minimumFee)
-                }}
-              >
-                <Box>Custom</Box>
-                <HStack spacing={1}>
-                  <Box fontSize={18} color="primaryr">
-                    {satsbyte}
-                  </Box>
-                  <Box>sats/vB</Box>
-                </HStack>
-                <Slider
-                  min={fees.minimumFee}
-                  defaultValue={fees.minimumFee}
-                  max={500}
-                  step={1}
-                  w={300}
-                  onChange={(value) => {
-                    setValue('satsbyte', value)
-                  }}
-                >
-                  <SliderTrack>
-                    <SliderFilledTrack />
-                  </SliderTrack>
-                  <SliderThumb />
-                </Slider>
-              </VStack>
-            </HStack>
-          )}
+          <FeeRateSelector
+            value={satsbyte}
+            onChange={(value) => {
+              setValue('satsbyte', value)
+            }}
+          />
           <HStack mt={8} w="full" justify="center" px={8} spacing={8}>
             <Button variant="outline" flexGrow={1} onClick={() => setStep(1)}>
               Back
             </Button>
             <Button
               flexGrow={4}
-              isLoading={initDftIsLoading}
+              isLoading={initDFTIsLoading || mintFTIsLoading}
               onClick={handleSubmit((payload) => {
                 if (mode === 'fair') {
                   payload.totalSupply = payload.mintAmount * payload.maxMints
+                  initDFT(payload)
+                } else {
+                  mintFT(payload)
                 }
-                initDft(payload)
               })}
             >
               Submit
@@ -606,137 +513,13 @@ function Page() {
         </VStack>
       )}
 
-      {/* TODO show USD price */}
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent minWidth={700}>
-          <ModalHeader>Payment</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack mb={4} color="gray.400">
-              <CopyToClipboard text={initDftResult?.orderId}>
-                <Text fontSize={14}>OrderId: {initDftResult?.orderId}</Text>
-              </CopyToClipboard>
-              <HStack spacing={4} fontSize={12}>
-                <Flex align="center">
-                  <Text>Fee Rate: {satsbyte} </Text>
-                  <Text color="gray.400" ml={1}>
-                    sats/vB
-                  </Text>
-                </Flex>
-                <Text>Status: {initDftResult?.status}</Text>
-              </HStack>
-            </VStack>
-            <VStack align="flex-start" spacing={3}>
-              <Flex justify="space-between" w="full">
-                <Text color="gray.300" fontSize={14}>
-                  Sats in atomical:
-                </Text>
-                <HStack spacing={1}>
-                  <Text>
-                    {(initDftResult?.fees.commitAndRevealFeePlusOutputs ?? 0) -
-                      (initDftResult?.fees.commitAndRevealFee ?? 0)}
-                  </Text>
-                  <Text color="gray.400">sats</Text>
-                </HStack>
-              </Flex>
-              <Flex justify="space-between" w="full">
-                <Text color="gray.300" fontSize={14}>
-                  Network Fee:
-                </Text>
-                <HStack spacing={1}>
-                  <Text>{initDftResult?.fees.commitAndRevealFee}</Text>
-                  <Text color="gray.400">sats</Text>
-                </HStack>
-              </Flex>
-              <Flex justify="space-between" w="full">
-                <Text color="gray.300" fontSize={14}>
-                  Service Fee:
-                </Text>
-                <Text color="green">Free</Text>
-              </Flex>
-              <Flex justify="space-between" w="full">
-                <Text>Total Amount:</Text>
-                <HStack spacing={1}>
-                  <CopyToClipboard
-                    text={satsToBTC(
-                      initDftResult?.fees.commitAndRevealFeePlusOutputs
-                    )}
-                  >
-                    <Text>
-                      {satsToBTC(
-                        initDftResult?.fees.commitAndRevealFeePlusOutputs
-                      )}
-                    </Text>
-                  </CopyToClipboard>
-                  <Text color="gray.400">BTC</Text>
-                </HStack>
-              </Flex>
-            </VStack>
-            <Divider my={3} />
-
-            <Accordion
-              allowToggle
-              bg="gray.700"
-              borderRadius={8}
-              display={initDftResult?.status === 'pending' ? 'block' : 'none'}
-            >
-              <AccordionItem border="none">
-                <AccordionButton py={3}>
-                  <Box as="span" flex="1" textAlign="left">
-                    Pay with BTC
-                  </Box>
-                  <AccordionIcon />
-                </AccordionButton>
-                <AccordionPanel>
-                  <VStack justify="center">
-                    <Text color="gray.400" fontSize={14}>
-                      Scan the QRCode to pay:
-                    </Text>
-                    <QRCode text={initDftResult?.payAddress} />
-                    <Text color="gray.400" fontSize={14} mt={6}>
-                      Or pay to the address below:
-                    </Text>
-                    <CopyToClipboard text={initDftResult?.payAddress}>
-                      <Text>{initDftResult?.payAddress}</Text>
-                    </CopyToClipboard>
-                  </VStack>
-                </AccordionPanel>
-              </AccordionItem>
-              <AccordionItem border="none">
-                <AccordionButton py={3}>
-                  <Box as="span" flex="1" textAlign="left">
-                    Pay with Wallet
-                  </Box>
-                  <AccordionIcon />
-                </AccordionButton>
-                <AccordionPanel>
-                  <VStack>
-                    {account ? (
-                      <Button>Pay with Wallet</Button>
-                    ) : (
-                      <WalletConnector>
-                        <Button>Connect Wallet To Pay</Button>
-                      </WalletConnector>
-                    )}
-                  </VStack>
-                </AccordionPanel>
-              </AccordionItem>
-            </Accordion>
-            <Text mt={6} mb={3} color="gray.400" fontSize={14}>
-              Remain time: {countDown.hours} hours {countDown.minutes} minutes{' '}
-              {countDown.seconds} seconds
-            </Text>
-            <Text color="gray.400" fontSize={14}>
-              You can find this order{' '}
-              <Link textDecoration="underline" href="/arc20/order">
-                here
-              </Link>
-            </Text>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-    </Flex>
+      <PaymentModal
+        isOpen={isOpen}
+        onClose={onClose}
+        {...(mode === 'fair' ? initDFTResult : mintFTResult)}
+        remainTime={remainTime}
+      />
+    </Box>
   )
 }
 

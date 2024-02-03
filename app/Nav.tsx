@@ -13,7 +13,7 @@ import {
 import { usePathname } from 'next/navigation'
 
 import { GlobalContext } from './providers'
-import WalletConnector from './WalletConnector'
+import WalletConnector from '../components/WalletConnector'
 
 const links = [
   {
@@ -28,14 +28,18 @@ const links = [
     name: 'NFT',
     href: '/nft',
   },
+  // {
+  //   name: 'Realm',
+  //   href: '/realm',
+  // },
   {
-    name: 'Realm',
-    href: '/realm',
+    name: 'Account',
+    href: '/account',
   },
-  {
-    name: 'About',
-    href: '/about',
-  },
+  // {
+  //   name: 'About',
+  //   href: '/about',
+  // },
 ]
 
 const Nav: React.FC = () => {
@@ -64,12 +68,12 @@ const Nav: React.FC = () => {
             </Heading>
           </HStack>
         </Link>
-        <HStack spacing={5}>
+        <HStack spacing={5} fontSize={16}>
           {links.map((link, index) => (
             <Link
               key={index}
               href={link.href}
-              variant={pathname === link.href ? 'underline' : 'link'}
+              variant={link.href.split('/')[1] === pathname.split('/')[1] ? 'underline' : 'link'}
             >
               {link.name}
             </Link>

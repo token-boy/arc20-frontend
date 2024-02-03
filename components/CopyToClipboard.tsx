@@ -3,7 +3,7 @@ import { HStack } from '@chakra-ui/react'
 import { LuCopy } from 'react-icons/lu'
 
 const CopyToClipboard: React.FC<{
-  text: string | number
+  text?: string | number
   children: React.ReactNode
 }> = (props) => {
   return (

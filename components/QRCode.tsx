@@ -2,7 +2,7 @@ import qrcode from 'qrcode'
 import { useEffect, useState } from 'react'
 
 const QRCode: React.FC<{
-  text: string
+  text?: string
 }> = ({ text }) => {
   const [dataUrl, setDataUrl] = useState<string>()
 

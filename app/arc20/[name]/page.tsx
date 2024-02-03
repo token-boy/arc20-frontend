@@ -27,7 +27,7 @@ async function Page({ params }: { params: { name: string } }) {
   }
 
   return (
-    <Box px={20} mt={10}>
+    <Box px={20} mt={10} fontSize={16}>
       <HStack spacing={4} align="flex-start">
         <Box
           px={10}

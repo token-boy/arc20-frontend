@@ -6,3 +6,5 @@ interface Window {
 }
 
 declare module 'qrcode'
+
+type ReactFC<T = any> = React.FC<T & { children: React.ReactNode }>

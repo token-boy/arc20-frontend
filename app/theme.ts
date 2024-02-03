@@ -124,11 +124,32 @@ const Modal = defineStyleConfig({
   }
 })
 
+const Tabs = defineStyleConfig({
+  variants: {
+    line: {
+      tab: {
+        _selected: {
+          color: 'primaryl',
+          borderBottomColor: 'primaryl',
+        },
+        _active: {
+          bg: 'transparent'
+        }
+      },
+      tablist: {
+        borderBottomColor: 'gray.600'
+      }
+    },
+  },
+})
+
+
 const theme = extendTheme({
   colors: {
     primary: 'linear-gradient(45deg, #43CBFF 0%, #9662D1 100%)',
     primaryl: '#43CBFF',
     primaryr: '#9662D1',
+    bg: '#121212',
   },
   components: {
     Button,
@@ -136,14 +157,16 @@ const theme = extendTheme({
     Link,
     NumberInput,
     Textarea,
-    Modal
+    Modal,
+    Tabs
   },
   styles: {
     global: {
       body: {
-        bg: '#121212',
+        bg: 'bg',
         color: 'white',
         fontWeight: '600',
+        fontSize: '14px',
       },
     },
   },

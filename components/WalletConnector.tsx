@@ -1,4 +1,4 @@
-import { useWallets } from '@/utils/wallet'
+import { Account, useWallets } from '@/utils/wallet'
 import {
   Modal,
   ModalOverlay,
@@ -19,7 +19,8 @@ import {
   AlertDialogOverlay,
 } from '@chakra-ui/react'
 import { useContext, useEffect, useRef } from 'react'
-import { GlobalContext } from './providers'
+import { GlobalContext } from '../app/providers'
+import { useMount } from 'ahooks'
 
 const WalletConnector: React.FC<{ children: React.ReactNode }> = (props) => {
   const {
@@ -43,7 +44,7 @@ const WalletConnector: React.FC<{ children: React.ReactNode }> = (props) => {
     if (account) {
       setAccount(JSON.parse(account))
     }
-  }, [])
+  }, [wallets])
 
   return (
     <>
@@ -53,7 +54,7 @@ const WalletConnector: React.FC<{ children: React.ReactNode }> = (props) => {
           <ModalHeader>Choose Wallet To Connect</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            {wallets.map((wallet, index) => (
+            {Object.values(wallets).map((wallet, index) => (
               <Button
                 key={index}
                 variant="outline"

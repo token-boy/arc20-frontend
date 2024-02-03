@@ -20,11 +20,14 @@ export async function request(
     baseUrl = ''
   }
 
-  const headers:Dict = {}
+  const headers: Dict = {}
   if (method !== 'GET' && method !== 'DELETE') {
     headers['Content-Type'] = 'application/json'
   }
-  
+  if (typeof window !== 'undefined' && !path.startsWith('http')) {
+    headers['X-Session-Id'] = localStorage.getItem('sessionId')
+  }
+
   try {
     const response = await fetch(`${baseUrl}${path}`, {
       method: method,
@@ -35,7 +38,7 @@ export async function request(
     })
 
     const result = await response.json()
-    
+
     if (!response.ok) {
       result.status = response.status
       throw result
@@ -48,9 +51,10 @@ export async function request(
         title: error.message,
         status: 'error',
         position: 'top-right',
-        isClosable: true
+        isClosable: true,
       })
     }
+    throw error
   }
 }
 
@@ -89,7 +93,15 @@ export function useEndpoint(
         }
 
         // URL search parameters
-        endpoint = `${endpoint}?${new URLSearchParams(params).toString()}`
+        for (const [key, value] of Object.entries(params)) {
+          if (value === undefined) {
+            delete params[key]
+          }
+        }
+        const queryString = new URLSearchParams(params).toString()
+        if (queryString !== '') {
+          endpoint = `${endpoint}?${queryString}`
+        }
       }
 
       return request(endpoint, {
