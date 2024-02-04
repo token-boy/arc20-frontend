@@ -4,11 +4,11 @@ WORKDIR /app
 
 RUN npm install -g pnpm@8.2.0
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install
+RUN pnpm i
 
 COPY . .
 
-RUN pnpm build
+RUN npm run build
 
 EXPOSE 3000
 

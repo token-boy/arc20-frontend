@@ -15,17 +15,20 @@ export async function request(
   options = options ?? {}
   const method = options.method ?? 'GET'
 
-  let baseUrl = `${process.env.NEXT_PUBLIC_API}/`
-  if (path.startsWith('http')) {
-    baseUrl = ''
-  }
-
+  let baseUrl = ''
   const headers: Dict = {}
+
   if (method !== 'GET' && method !== 'DELETE') {
     headers['Content-Type'] = 'application/json'
   }
-  if (typeof window !== 'undefined' && !path.startsWith('http')) {
-    headers['X-Session-Id'] = localStorage.getItem('sessionId')
+  if (!path.startsWith('http')) {
+    if (typeof window === 'undefined') {
+      baseUrl = `${process.env.API}/`
+      headers['Origin'] = 'http://client.docker'
+    } else {
+      baseUrl = `${process.env.NEXT_PUBLIC_API}/`
+      headers['X-Session-Id'] = localStorage.getItem('sessionId')
+    }
   }
 
   try {
