@@ -18,6 +18,8 @@ deploy:
       --name=$SERVICE_NAME
       --replicas=1
       --update-delay=10s
+      --env=NEXT_PUBLIC_API=https://bullish-api.mxsyx.site
+      --env=NEXT_PUBLIC_MEMPOOL_URL=https://mempool.mxsyx.site
       --label="traefik.enable=true"
       --label="traefik.docker.lbswarm=true"
       --label="traefik.http.routers.$SERVICE_NAME.rule=Host(\`$SERVICE_NAME.mxsyx.site\`)"
