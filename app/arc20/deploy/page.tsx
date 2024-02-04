@@ -31,29 +31,13 @@ import { useForm } from 'react-hook-form'
 import { FaCheck } from 'react-icons/fa'
 
 import { GlobalContext } from '@/app/providers'
-import { OrderStatus, UINT8_MAX, UINT_MAX } from '@/utils/constants'
+import { OrderStatus, UINT8_MAX, UINT_MAX, bitworkcMap } from '@/utils/constants'
 import { useEndpoint } from '@/utils/request'
 import { useRouter } from 'next/navigation'
 import PaymentModal from '@/components/PaymentModal'
 import FeeRateSelector from '@/components/FeeRateSelector'
+import Panel from '@/components/Panel'
 
-export const bitworkcMap: Dict = {
-  '0000': {
-    label: 'easy',
-    timeSec: 64,
-    timeFmt: '1 miunte',
-  },
-  '00000': {
-    label: 'normal',
-    timeSec: 1024,
-    timeFmt: '16 minutes',
-  },
-  '000000': {
-    label: 'hard',
-    timeSec: 16384,
-    timeFmt: '256 minutes',
-  },
-}
 
 const feesMap: Dict = {
   fastestFee: {
@@ -82,6 +66,7 @@ function Page() {
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [isTickerValid, setIsTickerValid] = useState<boolean>(false)
   const [remainTime, setRemainTime] = useState<number>()
+  const [isSubmited, setIsSubmited] = useState<boolean>(false)
 
   const { isOpen, onOpen, onClose } = useDisclosure()
 
@@ -135,6 +120,7 @@ function Page() {
       onOpen()
       setRemainTime(Date.now() + 1000 * 60 * 60 * 2)
       getOrder(undefined, { id: data?.orderId })
+      setIsSubmited(true)
     },
   })
 
@@ -169,7 +155,7 @@ function Page() {
     }
   )
 
-  const { run: getOrder } = useEndpoint('orders/:id', {
+  const { run: getOrder, data: order } = useEndpoint('orders/:id', {
     onSuccess: (order) => {
       if (step === 3 || location.pathname !== '/arc20/deploy') {
         return
@@ -192,15 +178,7 @@ function Page() {
   })
 
   return (
-    <Box
-      mt={4}
-      bg="gray.700"
-      px={8}
-      py={6}
-      w="max-content"
-      m="auto"
-      borderRadius={10}
-    >
+    <Panel>
       {/* Step 1. */}
       {step === 1 && (
         <VStack w={600} spacing={6}>
@@ -485,7 +463,12 @@ function Page() {
             </Button>
             <Button
               flexGrow={4}
-              isLoading={initDFTIsLoading || mintFTIsLoading}
+              isLoading={
+                initDFTIsLoading ||
+                mintFTIsLoading ||
+                order?.status === OrderStatus.Pending
+              }
+              isDisabled={isSubmited}
               onClick={handleSubmit((payload) => {
                 if (mode === 'fair') {
                   payload.totalSupply = payload.mintAmount * payload.maxMints
@@ -519,7 +502,7 @@ function Page() {
         {...(mode === 'fair' ? initDFTResult : mintFTResult)}
         remainTime={remainTime}
       />
-    </Box>
+    </Panel>
   )
 }
 

@@ -14,6 +14,12 @@ const Button = defineStyleConfig({
         bg: 'primary',
         opacity: '0.7',
       },
+      _disabled: {
+        _hover: {
+          bg: 'primary !important',
+          opacity: 0.4,
+        },
+      },
     },
     gray: {
       bg: '#2C2C2C',
@@ -41,7 +47,8 @@ const Button = defineStyleConfig({
         bg: 'primaryl',
         opacity: '0.7',
       },
-    }
+    },
+    
   },
 })
 
@@ -79,7 +86,7 @@ const NumberInput = defineStyleConfig({
       },
       stepper: {
         color: 'white',
-      }
+      },
     },
   },
 })
@@ -116,12 +123,12 @@ const Link = defineStyleConfig({
 const Modal = defineStyleConfig({
   baseStyle: {
     overlay: {
-      backdropFilter: 'blur(4px)'
+      backdropFilter: 'blur(4px)',
     },
     dialog: {
       bg: 'gray.800',
-    }
-  }
+    },
+  },
 })
 
 const Tabs = defineStyleConfig({
@@ -133,16 +140,15 @@ const Tabs = defineStyleConfig({
           borderBottomColor: 'primaryl',
         },
         _active: {
-          bg: 'transparent'
-        }
+          bg: 'transparent',
+        },
       },
       tablist: {
-        borderBottomColor: 'gray.600'
-      }
+        borderBottomColor: 'gray.600',
+      },
     },
   },
 })
-
 
 const theme = extendTheme({
   colors: {
@@ -158,7 +164,7 @@ const theme = extendTheme({
     NumberInput,
     Textarea,
     Modal,
-    Tabs
+    Tabs,
   },
   styles: {
     global: {

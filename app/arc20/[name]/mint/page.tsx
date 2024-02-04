@@ -20,12 +20,11 @@ import {
 import { useForm } from 'react-hook-form'
 
 import { GlobalContext } from '@/app/providers'
-import { OrderStatus } from '@/utils/constants'
+import { OrderStatus, bitworkcMap } from '@/utils/constants'
 import { useEndpoint } from '@/utils/request'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import FeeRateSelector from '@/components/FeeRateSelector'
 import PaymentModal from '@/components/PaymentModal'
-import { bitworkcMap } from '../../deploy/page'
 import { FaPlay, FaPause } from 'react-icons/fa'
 
 let sequence = 0
@@ -42,6 +41,7 @@ function Page() {
   const [miningStatus, setMiningStatus] = useState<'runing' | 'paused'>(
     orderId ? 'paused' : 'runing'
   )
+  const [isSubmited, setIsSubmited] = useState<boolean>(false)
 
   const { isOpen, onOpen, onClose } = useDisclosure()
 
@@ -80,6 +80,7 @@ function Page() {
       setRemainTime(Date.now() + 1000 * 60 * 60 * 2)
       getOrder(undefined, { id: data.orderId })
       setOrderId(data.orderId)
+      setIsSubmited(true)
     },
   })
 
@@ -141,13 +142,14 @@ function Page() {
     },
   })
 
-  const { run: getOrder } = useEndpoint('orders/:id', {
+  const { run: getOrder, data: order } = useEndpoint('orders/:id', {
     onSuccess: (order) => {
       if (location.pathname !== `/arc20/${tokenName}/mint`) {
         return
       }
       if (order.status === OrderStatus.WaitForMining) {
         getMining(undefined, { orderId: order.id })
+        setStep(2)
       } else if (order.status === OrderStatus.Completed) {
         setStep(3)
       } else if (order.status === OrderStatus.Pending) {
@@ -194,7 +196,8 @@ function Page() {
             />
             <Button
               flexGrow={4}
-              isLoading={mintDFTIsLoading}
+              isLoading={mintDFTIsLoading || order?.status === OrderStatus.Pending}
+              isDisabled={isSubmited}
               w="80%"
               mt={8}
               onClick={handleSubmit((payload) => {

@@ -58,9 +58,10 @@ const Nav: React.FC = () => {
       top={0}
       bg="#121212"
       zIndex={10}
+      mb={4}
     >
       <HStack spacing={12}>
-        <Link href="/">
+        <Link href="/" _hover={{ textDecoration: 'none' }}>
           <HStack cursor="pointer">
             <Image src="/logo.png" alt="logo" w={8} h={8} />
             <Heading as="h1" fontSize={24}>
@@ -73,7 +74,11 @@ const Nav: React.FC = () => {
             <Link
               key={index}
               href={link.href}
-              variant={link.href.split('/')[1] === pathname.split('/')[1] ? 'underline' : 'link'}
+              variant={
+                link.href.split('/')[1] === pathname.split('/')[1]
+                  ? 'underline'
+                  : 'link'
+              }
             >
               {link.name}
             </Link>

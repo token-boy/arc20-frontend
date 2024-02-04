@@ -42,8 +42,7 @@ const FeeRateSelector: React.FC<{
     {
       manual: false,
       onSuccess: (data) => {
-        // setValue('satsbyte', data.halfHourFee)
-        setFeeRate('halfHourFee')
+        onChange(data.halfHourFee)
       },
     }
   )
@@ -61,7 +60,7 @@ const FeeRateSelector: React.FC<{
         />
       )}
       {fees && (
-        <HStack spacing={10} mt={4} w={600} wrap="wrap">
+        <HStack spacing={10} mt={4} w={600} wrap="wrap" justify="space-between">
           {Object.keys(feesMap).map((fee) => (
             <VStack
               key={fee}
