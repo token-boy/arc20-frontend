@@ -18,6 +18,7 @@ deploy:
       --name=$SERVICE_NAME
       --replicas=1
       --update-delay=10s
+      --env=NEXT_PUBLIC_API=http://bullish-api
       --env=NEXT_PUBLIC_API=https://bullish-api.mxsyx.site
       --env=NEXT_PUBLIC_MEMPOOL_URL=https://mempool.mxsyx.site
       --label="traefik.enable=true"
