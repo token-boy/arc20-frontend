@@ -6,7 +6,10 @@ build:
   tags:
     - ci
   script:
-    - docker build --tag $CONTAINER_IMAGE --build-arg NPM_REGISTRY=https://registry.npm.taobao.org .
+    - docker build 
+      --tag $CONTAINER_IMAGE 
+      --build-arg NPM_REGISTRY=https://registry.npm.taobao.org 
+      --build-arg SERVICE_API=http://bullish-api .
 
 deploy:
   stage: deploy
