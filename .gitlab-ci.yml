@@ -16,7 +16,7 @@ deploy:
   tags:
     - ci
   script:
-    - if [[ -z $(docker service ls --format="{{.Name}}" | grep -w $SERVICE_NAME) ]]; then
+    - if [[ -z $(docker service ls --format="{{.Name}}" | grep -w ^$SERVICE_NAME\$) ]]; then
     - docker service create
       --name=$SERVICE_NAME
       --replicas=1
