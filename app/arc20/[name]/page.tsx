@@ -92,7 +92,7 @@ async function Page({ params }: { params: { name: string } }) {
           </VStack>
           <VStack>
             <Box color="gray.400">Deployed At</Box>
-            <Box>{token.deployedAt}</Box>
+            <Box>{new Date(token.deployedAt).toLocaleString()}</Box>
           </VStack>
           <VStack>
             <Box color="gray.400">Per Mint Amount</Box>
