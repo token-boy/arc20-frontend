@@ -9,7 +9,7 @@ build:
     - docker build 
       --tag $CONTAINER_IMAGE 
       --build-arg NPM_REGISTRY=https://registry.npm.taobao.org 
-      --build-arg SERVICE_API=http://bullish-api .
+      --build-arg SERVICE_API=https://bullish-api.mxsyx.site .
 
 deploy:
   stage: deploy
