@@ -6,7 +6,7 @@ build:
   tags:
     - ci
   script:
-    - docker build --tag $CONTAINER_IMAGE .
+    - docker build --tag $CONTAINER_IMAGE --build-arg NPM_REGISTRY=https://registry.npm.taobao.org .
 
 deploy:
   stage: deploy
