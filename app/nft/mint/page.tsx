@@ -50,6 +50,7 @@ function Page() {
       }
       if (order.status === OrderStatus.Completed) {
         onClose()
+        router.replace('/nft')
       } else if (order.status === OrderStatus.Timeout) {
         onClose()
         router.push('/account/orders')

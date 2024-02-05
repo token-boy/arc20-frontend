@@ -150,6 +150,7 @@ function Page() {
       if (order.status === OrderStatus.WaitForMining) {
         getMining(undefined, { orderId: order.id })
         setStep(2)
+        onClose()
       } else if (order.status === OrderStatus.Completed) {
         setStep(3)
       } else if (order.status === OrderStatus.Pending) {
