@@ -1,7 +1,7 @@
 'use client'
 
 import { useContext, useEffect, useState } from 'react'
-import router from 'next/router'
+import {useRouter} from 'next/navigation'
 import {
   Button,
   FormControl,
@@ -28,6 +28,8 @@ function Page() {
   const [isSubmited, setIsSubmited] = useState<boolean>(false)
 
   const { isOpen, onOpen, onClose } = useDisclosure()
+
+  const router = useRouter()
 
   const {
     run: mintNFT,

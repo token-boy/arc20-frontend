@@ -1,8 +1,13 @@
+stages:
+  - build
+  - deploy
+
 variables:
   CONTAINER_IMAGE: $CI_PROJECT_NAME:$CI_COMMIT_SHORT_SHA
   SERVICE_NAME: bullish
 
 build:
+  stage: build
   tags:
     - ci
   script:
