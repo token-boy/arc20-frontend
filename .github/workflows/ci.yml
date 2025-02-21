@@ -36,8 +36,8 @@ jobs:
         with:
           context: .
           build-args: |
-            API=https://api-arc20.mxxsyx.site
-            NEXT_PUBLIC_API=https://api-arc20.mxxsyx.site
+            API=https://api-arc20.mxsyx.site
+            NEXT_PUBLIC_API=https://api-arc20.mxsyx.site
             NEXT_PUBLIC_MEMPOOL_URL=https://mempool.mxsyx.site
           push: true
           cache-from: type=gha
