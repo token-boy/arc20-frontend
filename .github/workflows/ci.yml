@@ -56,9 +56,9 @@ jobs:
             docker run --detach \
               --name=${{ env.PROJECT_NAME }}-${{ github.sha }} \
               --label=${{ env.PROJECT_NAME }} \
-              --label="traefik.enable=true"
-              --label="traefik.http.routers.${{ env.PROJECT_NAME }}.rule=Host(\`arc20.mxsyx.site\`)"
-              --label="traefik.http.routers.${{ env.PROJECT_NAME }}.tls.certResolver=letsencrypt"
-              --label="traefik.http.services.${{ env.PROJECT_NAME }}.loadbalancer.server.port=3000"
+              --label="traefik.enable=true" \
+              --label="traefik.http.routers.${{ env.PROJECT_NAME }}.rule=Host(\`arc20.mxsyx.site\`)" \
+              --label="traefik.http.routers.${{ env.PROJECT_NAME }}.tls.certResolver=letsencrypt" \
+              --label="traefik.http.services.${{ env.PROJECT_NAME }}.loadbalancer.server.port=3000" \
               --network=main \
               ${{ env.IMAGE }}
